@@ -113,7 +113,7 @@ module FlowControl =
       let pt =
         match pt with
         | Some p -> p
-        | None -> failwith "not found FSharpFunc<'T1, 'T2> in %s" info.Name
+        | None -> failwithf "not found FSharpFunc<'T1, 'T2> in %s" info.Name
       let f =
         let tuple = Var("tuple", retType)
         let composeRight = composeRight.MakeGenericMethod([| pt; retType; info.ReturnType |])
@@ -176,7 +176,7 @@ module FlowControl =
           Expr.NewTuple([ Expr.Var(v); <@@ Break @@> ]),
           cont)
       Expr.Let(v, Expr.TupleGet(x, 0), Expr.Let(c, Expr.TupleGet(x, 1), flow))
-    | exprs -> failwith "oops!: %A" exprs
+    | exprs -> failwithf "oops!: %A" exprs
 
     ProvidedMethod("Combine", parameters, retType, IsStaticMethod = false, InvokeCode = inner)
 
@@ -193,7 +193,7 @@ module FlowControl =
 
     let inner = function
     | MethodCall(_, Single f) -> f
-    | exprs -> failwith "oops!: %A" exprs
+    | exprs -> failwithf "oops!: %A" exprs
 
     ProvidedMethod("Delay", [parameter], parameter.ParameterType, IsStaticMethod = false, InvokeCode = inner)
 
@@ -212,6 +212,6 @@ module FlowControl =
     | MethodCall(_, Single f) ->
       let pipeLeft = pipeLeft.MakeGenericMethod([| typeof<unit>; retType |])
       Expr.TupleGet(Expr.Call(pipeLeft, [ f; <@@ () @@> ]), 0)
-    | exprs -> failwith "oops!: %A" exprs
+    | exprs -> failwithf "oops!: %A" exprs
 
     ProvidedMethod("Run", [parameter], info.ReturnType, IsStaticMethod = false, InvokeCode = inner)
