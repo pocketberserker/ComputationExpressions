@@ -141,9 +141,6 @@ module FlowControl =
 
     ProvidedMethod("Zero", [], retType, IsStaticMethod = false, InvokeCode = inner)
 
-  let private pipeLeft =
-    operators |> Array.find (fun m -> m.Name = "op_PipeLeft")
-
   let genCombine (methods: MethodInfo []) =
 
     let originalName = "continuable"
@@ -162,13 +159,12 @@ module FlowControl =
 
     let inner = function
     | MethodCall(_, Pair(x, rest)) ->
-      let pipeLeft = pipeLeft.MakeGenericMethod([| typeof<unit>; retType |])
       let v = Var("v", t)
       let c = Var("c", typeof<FlowControl>)
       let cont =
         Expr.IfThenElse(
           Expr.Call(info, [Expr.Var(v)]),
-          Expr.Call(pipeLeft, [ rest; <@@ () @@> ]),
+          Expr.Application(rest, <@@ () @@>),
           Expr.NewTuple([ Expr.Var(v); <@@ Break @@>]))
       let flow =
         Expr.IfThenElse(
@@ -210,8 +206,7 @@ module FlowControl =
 
     let inner = function
     | MethodCall(_, Single f) ->
-      let pipeLeft = pipeLeft.MakeGenericMethod([| typeof<unit>; retType |])
-      Expr.TupleGet(Expr.Call(pipeLeft, [ f; <@@ () @@> ]), 0)
+      Expr.TupleGet(Expr.Application(f, <@@ () @@>), 0)
     | exprs -> failwithf "oops!: %A" exprs
 
     ProvidedMethod("Run", [parameter], info.ReturnType, IsStaticMethod = false, InvokeCode = inner)
