@@ -4,9 +4,9 @@ owners
 authors
     pocketberserker
 projectUrl
-    https://github.com/pocketberserker/FSharp.Data.Bits
+    https://github.com/pocketberserker/ComputationExpressions
 licenseUrl
-    https://github.com/perpocketberserker/FSharp.Data.Bits/blob/master/LICENSE
+    https://github.com/perpocketberserker/ComputationExpressions/blob/master/LICENSE
 requireLicenseAcceptance
     false
 tags
