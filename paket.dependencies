@@ -2,12 +2,19 @@ source https://api.nuget.org/v3/index.json
 source https://www.nuget.org/api/v2/
 
 nuget FSharp.TypeProviders.StarterPack
-nuget Persimmon
-nuget Persimmon.Console
-nuget FAKE
-nuget FAKE.Persimmon
-nuget Nuget.CommandLine
-nuget SourceLink.Fake
 
-github fsharp/FAKE modules/Octokit/Octokit.fsx
+group Build
+  source https://api.nuget.org/v3/index.json
 
+  nuget FAKE
+  nuget FAKE.Persimmon
+  nuget Persimmon.Console
+  nuget Nuget.CommandLine
+  nuget SourceLink.Fake
+
+  github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+group Test
+  source https://api.nuget.org/v3/index.json
+
+  nuget Persimmon
