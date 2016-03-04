@@ -63,6 +63,13 @@ Target "AssemblyInfo" (fun _ ->
     ]
 
     [
+        Attribute.Title "ComputationExpressions"
+        Attribute.Description "provided computation expressions."
+        Attribute.Guid "a688b2b0-32c7-4ae8-b9ff-ec58e8a3e9ff"
+    ] @ common
+    |> CreateFSharpAssemblyInfo "./src/ComputationExpressions/AssemblyInfo.fs"
+
+    [
         Attribute.Title "ComputationExpressions.TypeProviders"
         Attribute.Description "provided computation expressions."
         Attribute.Guid "b32a9d71-ba66-403d-a136-3ca43ab53deb"
