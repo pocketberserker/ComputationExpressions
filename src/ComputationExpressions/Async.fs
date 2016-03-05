@@ -4,11 +4,8 @@ open System
 
 type AsyncBuilder() =
   member __.ReturnFrom(x) =
-    async {
-      let! x = x
-      return fun _ -> x
-    }
-  member __.Return(x) = async { return fun _ -> x }
+    async { return fun _ -> x }
+  member __.Return(x) = async { return fun _ -> async { return x } }
   member this.Bind(x, f) =
     async {
       let! x = x
@@ -18,8 +15,10 @@ type AsyncBuilder() =
   member __.Combine(x: Async<(_ -> _) -> _>, rest: unit -> Async<(_ -> _) -> _>) =
     async {
       let! f = x
-      let! g = rest ()
-      return fun k -> f (fun _ -> g k)
+      return fun k -> f (fun _ -> async {
+        let! g = rest ()
+        return! g k
+      })
     }
   member __.TryWith(f, g) =
     try f () with e -> g e
@@ -29,7 +28,7 @@ type AsyncBuilder() =
   member this.Run(f: unit -> Async<(_ -> _) -> _>) =
     async {
       let! f = f ()
-      return f id
+      return! f async.Return
     }
 
 type AsyncWithZeroBuilder<'T>(zero: 'T) =
@@ -39,18 +38,15 @@ type AsyncWithZeroBuilder<'T>(zero: 'T) =
     if guard () then
       this.Combine(f (), fun () -> this.While(guard, f))
     else this.Zero()
-//  member this.For(xs: #seq<_>, f) =
-//    this.Using(
-//      xs.GetEnumerator(),
-//      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
+  member this.For(xs: #seq<_>, f) =
+    this.Using(
+      xs.GetEnumerator(),
+      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
 
 type AsyncOptionBuilder() =
   member __.ReturnFrom(x: Async<_ option>) =
-    async {
-      let! x = x
-      return fun _ -> x
-    }
-  member __.Return(x) = async { return fun _ -> Some x }
+    async { return fun _ -> x }
+  member __.Return(x) = async { return fun _ -> async { return Some x } }
   member __.Zero() = async { return fun k -> k None }
   member this.Bind(x: Async<_ option>, f) =
     async {
@@ -64,8 +60,10 @@ type AsyncOptionBuilder() =
   member __.Combine(x: Async<(_ option -> _) -> _>, rest: unit -> Async<(_ option -> _) -> _>) =
     async {
       let! f = x
-      let! g = rest ()
-      return fun k -> f (fun _ -> g k)
+      return fun k -> f (fun _ -> async {
+        let! g = rest ()
+        return! g k
+      })
     }
   member __.TryWith(f, g) =
     try f () with e -> g e
@@ -75,15 +73,15 @@ type AsyncOptionBuilder() =
     if guard () then
       this.Combine(f (), fun () -> this.While(guard, f))
     else this.Zero()
-//  member this.For(xs: #seq<_>, f) =
-//    this.Using(
-//      xs.GetEnumerator(),
-//      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
+  member this.For(xs: #seq<_>, f) =
+    this.Using(
+      xs.GetEnumerator(),
+      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
   member __.Delay(f) = f
   member __.Run(f: unit -> Async<(_ option -> _) -> _>) =
     async {
-      let! g = f ()
-      return g id
+      let! f = f ()
+      return! f async.Return
     }
 
 [<AutoOpen>]

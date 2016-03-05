@@ -196,25 +196,25 @@ module AsyncOptionTest =
     })
   }
 
-//  let forLoop = parameterize {
-//    source [
-//      (none, 0, None)
-//      (some 1, 5, Some 1)
-//      (some -1, 3, Some 0)
-//    ]
-//    run (fun (opt, expectedCounter, expected) -> test {
-//      let counter = ref 0
-//      let res = asyncOption {
-//        let! a = opt
-//        for i in 1..5 do
-//          counter := i
-//          if a = -1 && i = 3 then
-//            return 0
-//        return a
-//      }
-//      do!
-//        res |> Async.RunSynchronously
-//        |> assertEquals expected
-//      do! !counter |> assertEquals expectedCounter
-//    })
-//  }
+  let forLoop = parameterize {
+    source [
+      (none, 0, None)
+      (some 1, 5, Some 1)
+      (some -1, 3, Some 0)
+    ]
+    run (fun (opt, expectedCounter, expected) -> test {
+      let counter = ref 0
+      let res = asyncOption {
+        let! a = opt
+        for i in 1..5 do
+          counter := i
+          if a = -1 && i = 3 then
+            return 0
+        return a
+      }
+      do!
+        res |> Async.RunSynchronously
+        |> assertEquals expected
+      do! !counter |> assertEquals expectedCounter
+    })
+  }

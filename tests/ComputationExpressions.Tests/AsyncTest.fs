@@ -167,24 +167,24 @@ module AsyncWithZeroTest =
     })
   }
 
-//  let forLoop = parameterize {
-//    source [
-//      (returnI 1, 5, 1)
-//      (returnI -1, 3, 0)
-//    ]
-//    run (fun (opt, expectedCounter, expected) -> test {
-//      let counter = ref 0
-//      let res = async {
-//        let! a = opt
-//        for i in 1..5 do
-//          counter := i
-//          if a = -1 && i = 3 then
-//            return 0
-//        return a
-//      }
-//      do!
-//        res |> Async.RunSynchronously
-//        |> assertEquals expected
-//      do! !counter |> assertEquals expectedCounter
-//    })
-//  }
+  let forLoop = parameterize {
+    source [
+      (returnI 1, 5, 1)
+      (returnI -1, 3, 0)
+    ]
+    run (fun (opt, expectedCounter, expected) -> test {
+      let counter = ref 0
+      let res = asyncWithZero -1{
+        let! a = opt
+        for i in 1..5 do
+          counter := i
+          if a = -1 && i = 3 then
+            return 0
+        return a
+      }
+      do!
+        res |> Async.RunSynchronously
+        |> assertEquals expected
+      do! !counter |> assertEquals expectedCounter
+    })
+  }
