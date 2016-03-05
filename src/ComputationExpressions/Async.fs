@@ -3,6 +3,7 @@
 open System
 
 type AsyncBuilder() =
+  inherit WithTryBuilder()
   member __.ReturnFrom(x) =
     async { return fun _ -> x }
   member __.Return(x) = async { return fun _ -> async { return x } }
@@ -20,10 +21,6 @@ type AsyncBuilder() =
         return! g k
       })
     }
-  member __.TryWith(f, g) =
-    try f () with e -> g e
-  member __.TryFinally(f, g) =
-    try f () finally g ()
   member __.Delay(f) = f
   member this.Run(f: unit -> Async<(_ -> _) -> _>) =
     async {
@@ -44,6 +41,7 @@ type AsyncWithZeroBuilder<'T>(zero: 'T) =
       fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
 
 type AsyncOptionBuilder() =
+  inherit WithTryBuilder()
   member __.ReturnFrom(x: Async<_ option>) =
     async { return fun _ -> x }
   member __.Return(x) = async { return fun _ -> async { return Some x } }
@@ -65,10 +63,6 @@ type AsyncOptionBuilder() =
         return! g k
       })
     }
-  member __.TryWith(f, g) =
-    try f () with e -> g e
-  member __.TryFinally(f, g) =
-    try f () finally g ()
   member this.While(guard, f) =
     if guard () then
       this.Combine(f (), fun () -> this.While(guard, f))
