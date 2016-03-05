@@ -70,6 +70,7 @@
   <ItemGroup>
     <None Include="paket.references" />
     <Compile Include="TestUtil.fs" />
+    <Compile Include="AsyncTest.fs" />
     <Compile Include="AsyncOptionTest.fs" />
   </ItemGroup>
   <ItemGroup>

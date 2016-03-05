@@ -2,6 +2,45 @@
 
 open System
 
+type AsyncBuilder() =
+  member __.ReturnFrom(x) =
+    async {
+      let! x = x
+      return fun _ -> x
+    }
+  member __.Return(x) = async { return fun _ -> x }
+  member __.Zero<'T, 'U>() = async { return fun (k: 'T ->'U) -> k Unchecked.defaultof<'T> }
+  member this.Bind(x, f) =
+    async {
+      let! x = x
+      return! f x
+    }
+  member __.Using(x: #IDisposable, f) = async.Using(x, f)
+  member __.Combine(x: Async<(_ -> _) -> _>, rest: unit -> Async<(_ -> _) -> _>) =
+    async {
+      let! f = x
+      let! g = rest ()
+      return fun k -> f (fun _ -> g k)
+    }
+  member __.TryWith(f, g) =
+    try f () with e -> g e
+  member __.TryFinally(f, g) =
+    try f () finally g ()
+  member this.While(guard, f) =
+    if guard () then
+      this.Combine(f (), fun () -> this.While(guard, f))
+    else this.Zero()
+//  member this.For(xs: #seq<_>, f) =
+//    this.Using(
+//      xs.GetEnumerator(),
+//      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
+  member __.Delay(f) = f
+  member this.Run(f: unit -> Async<(_ -> _) -> _>) =
+    async {
+      let! f = f ()
+      return f id
+    }
+
 type AsyncOptionBuilder() =
   member __.ReturnFrom(x: Async<_ option>) =
     async {
@@ -46,5 +85,7 @@ type AsyncOptionBuilder() =
 
 [<AutoOpen>]
 module AsyncSyntax =
+
+  let async = AsyncBuilder()
 
   let asyncOption = AsyncOptionBuilder()

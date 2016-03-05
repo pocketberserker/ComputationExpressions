@@ -9,3 +9,12 @@ type Disposable<'T>(x: 'T) =
   interface System.IDisposable with
     member this.Dispose() =
       f ()
+
+[<AutoOpen>]
+module TestSyntax =
+
+  open Persimmon
+
+  type TestBuilder with
+    member this.TryWith(f, h) = try f () with e -> h e
+    member this.TryFinally(f, g) = try f () finally g ()
