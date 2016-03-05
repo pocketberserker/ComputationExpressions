@@ -72,27 +72,6 @@ module AsyncTest =
     })
   }
 
-  let combine = parameterize {
-    source [
-      (returnI 11, false, 11)
-      (returnI 18, true, 36)
-    ]
-    run(fun (opt, willEven, expected) -> test {
-      let isEven = ref false
-      let res = async {
-        let! a = opt
-        if a % 2 = 0 then
-          isEven := true
-          return a * 2
-        return a
-      }
-      do!
-        res |> Async.RunSynchronously
-        |> assertEquals expected
-      do! !isEven |> assertEquals willEven
-    })
-  }
-
   let tryWith = parameterize {
     source [
       ((fun () -> returnI 10), 10)
@@ -138,6 +117,33 @@ module AsyncTest =
     })
   }
 
+module AsyncWithZeroTest =
+
+  let returnI x = async.Return(x)
+
+  open ComputationExpressions
+
+  let combine = parameterize {
+    source [
+      (returnI 11, false, 11)
+      (returnI 18, true, 36)
+    ]
+    run(fun (opt, willEven, expected) -> test {
+      let isEven = ref false
+      let res = asyncWithZero 0 {
+        let! a = opt
+        if a % 2 = 0 then
+          isEven := true
+          return a * 2
+        return a
+      }
+      do!
+        res |> Async.RunSynchronously
+        |> assertEquals expected
+      do! !isEven |> assertEquals willEven
+    })
+  }
+
   let whileLoop = parameterize {
     source [
       (returnI 1, 5, 1)
@@ -146,7 +152,7 @@ module AsyncTest =
     ]
     run(fun (opt, expectedCounter, expected) -> test {
       let counter = ref 0
-      let res = async {
+      let res = asyncWithZero 0 {
         let! a = opt
         while (!counter < 5) do
           counter := !counter + a

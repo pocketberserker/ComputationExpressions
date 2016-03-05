@@ -9,7 +9,6 @@ type AsyncBuilder() =
       return fun _ -> x
     }
   member __.Return(x) = async { return fun _ -> x }
-  member __.Zero<'T, 'U>() = async { return fun (k: 'T ->'U) -> k Unchecked.defaultof<'T> }
   member this.Bind(x, f) =
     async {
       let! x = x
@@ -26,6 +25,16 @@ type AsyncBuilder() =
     try f () with e -> g e
   member __.TryFinally(f, g) =
     try f () finally g ()
+  member __.Delay(f) = f
+  member this.Run(f: unit -> Async<(_ -> _) -> _>) =
+    async {
+      let! f = f ()
+      return f id
+    }
+
+type AsyncWithZeroBuilder<'T>(zero: 'T) =
+  inherit AsyncBuilder()
+  member __.Zero() = async { return fun k -> k zero }
   member this.While(guard, f) =
     if guard () then
       this.Combine(f (), fun () -> this.While(guard, f))
@@ -34,12 +43,6 @@ type AsyncBuilder() =
 //    this.Using(
 //      xs.GetEnumerator(),
 //      fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
-  member __.Delay(f) = f
-  member this.Run(f: unit -> Async<(_ -> _) -> _>) =
-    async {
-      let! f = f ()
-      return f id
-    }
 
 type AsyncOptionBuilder() =
   member __.ReturnFrom(x: Async<_ option>) =
@@ -87,5 +90,6 @@ type AsyncOptionBuilder() =
 module AsyncSyntax =
 
   let async = AsyncBuilder()
+  let asyncWithZero zero = AsyncWithZeroBuilder(zero)
 
   let asyncOption = AsyncOptionBuilder()
