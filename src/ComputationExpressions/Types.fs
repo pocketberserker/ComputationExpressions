@@ -1,7 +1,7 @@
 ﻿namespace ComputationExpressions
 
 [<AbstractClass>]
-type WithTryBuilder() =
+type BaseBuilder() =
   member __.TryWith(f, g) =
     try f () with e -> g e
   member __.TryFinally(f, g) =

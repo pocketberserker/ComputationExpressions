@@ -3,7 +3,7 @@
 open System
 
 type AsyncBuilder() =
-  inherit WithTryBuilder()
+  inherit BaseBuilder()
   member __.ReturnFrom(x) =
     async { return fun _ -> x }
   member __.Return(x) = async { return fun _ -> async { return x } }
@@ -41,7 +41,7 @@ type AsyncWithZeroBuilder<'T>(zero: 'T) =
       fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
 
 type AsyncOptionBuilder() =
-  inherit WithTryBuilder()
+  inherit BaseBuilder()
   member __.ReturnFrom(x: Async<_ option>) =
     async { return fun _ -> x }
   member __.Return(x) = async { return fun _ -> async { return Some x } }
