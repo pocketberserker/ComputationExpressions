@@ -1,12 +1,14 @@
 ﻿namespace ComputationExpressions
 
 open System
+open System.ComponentModel
 
 type AsyncBuilder() =
   inherit BaseBuilder()
   member __.ReturnFrom(x) =
     async { return fun _ -> x }
   member __.Return(x) = async { return fun _ -> async { return x } }
+  [<EditorBrowsable(EditorBrowsableState.Never)>]
   member __.Zero() = async { return fun k -> k Unchecked.defaultof<'T> }
   member __.Bind(x, f) =
     async {
