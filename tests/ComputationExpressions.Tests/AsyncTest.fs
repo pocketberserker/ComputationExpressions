@@ -9,17 +9,26 @@ module AsyncTest =
 
   open ComputationExpressions
 
+  let runSync (zero: 'T) computation = Async.RunSynchronously(zero) computation
+
+  let zero = test {
+    let res = async { () }
+    do!
+      res |> runSync 0
+      |> assertEquals 0
+  }
+
   let ret = test {
     let res = async { return 0 }
     do!
-      res |> Async.RunSynchronously
+      res |> runSync 0
       |> assertEquals 0
   }
 
   let retret = test {
     let res = async { return 10; return 20; }
     do!
-      res |> Async.RunSynchronously
+      res |> runSync 0
       |> assertEquals 10
   }
 
@@ -27,7 +36,7 @@ module AsyncTest =
     let opt = returnI 1
     let res = async { return! opt; return 0 }
     do!
-      res |> Async.RunSynchronously
+      res |> runSync 0
       |> assertEquals (opt |> Async.RunSynchronously)
   }
 
@@ -37,7 +46,7 @@ module AsyncTest =
       return a * 2 |> string
     }
     do!
-      res |> Async.RunSynchronously
+      res |> runSync 0
       |> assertEquals "20"
   }
 
@@ -48,7 +57,7 @@ module AsyncTest =
       return a + b |> string
     }
     do!
-      res |> Async.RunSynchronously
+      res |> runSync 0
       |> assertEquals "15"
   }
 
@@ -66,7 +75,7 @@ module AsyncTest =
         return b |> string
       }
       do!
-       res |> Async.RunSynchronously
+       res |> runSync 0
        |> assertEquals expected
       do! !disposed |> assertEquals willDisposed
     })
@@ -86,7 +95,7 @@ module AsyncTest =
           _ -> return -1
       }
       do!
-        res |> Async.RunSynchronously
+        res |> runSync 0
         |> assertEquals expected
     })
   }
@@ -107,7 +116,7 @@ module AsyncTest =
             final := true
         }
         do!
-          res |> Async.RunSynchronously
+          res |> runSync 0
           |> assertEquals expected
         do! assertPred !final
       with
@@ -117,12 +126,6 @@ module AsyncTest =
     })
   }
 
-module AsyncWithZeroTest =
-
-  let returnI x = async.Return(x)
-
-  open ComputationExpressions
-
   let combine = parameterize {
     source [
       (returnI 11, false, 11)
@@ -130,7 +133,7 @@ module AsyncWithZeroTest =
     ]
     run(fun (opt, willEven, expected) -> test {
       let isEven = ref false
-      let res = asyncWithZero 0 {
+      let res = async {
         let! a = opt
         if a % 2 = 0 then
           isEven := true
@@ -138,7 +141,7 @@ module AsyncWithZeroTest =
         return a
       }
       do!
-        res |> Async.RunSynchronously
+        res |> runSync 0
         |> assertEquals expected
       do! !isEven |> assertEquals willEven
     })
@@ -152,7 +155,7 @@ module AsyncWithZeroTest =
     ]
     run(fun (opt, expectedCounter, expected) -> test {
       let counter = ref 0
-      let res = asyncWithZero 0 {
+      let res = async {
         let! a = opt
         while (!counter < 5) do
           counter := !counter + a
@@ -161,7 +164,7 @@ module AsyncWithZeroTest =
         return a
       }
       do!
-        res |> Async.RunSynchronously
+        res |> runSync 0
         |> assertEquals expected
       do! !counter |> assertEquals expectedCounter
     })
@@ -174,7 +177,7 @@ module AsyncWithZeroTest =
     ]
     run (fun (opt, expectedCounter, expected) -> test {
       let counter = ref 0
-      let res = asyncWithZero -1{
+      let res = async {
         let! a = opt
         for i in 1..5 do
           counter := i
@@ -183,7 +186,7 @@ module AsyncWithZeroTest =
         return a
       }
       do!
-        res |> Async.RunSynchronously
+        res |> runSync -1
         |> assertEquals expected
       do! !counter |> assertEquals expectedCounter
     })
