@@ -61,6 +61,19 @@ module AsyncTest =
       |> assertEquals "15"
   }
 
+  let sourceBindings = test {
+    let a = async { return! returnI 10 }
+    let b = async { return! returnI 5 }
+    let res = async {
+      let! a = a
+      let! b = b
+      return a + b |> string
+    }
+    do!
+      res |> runSync 0
+      |> assertEquals "15"
+  }
+
   let usingBinding = parameterize {
     source [
       (returnI (new Disposable<Async<int>>(returnI 10)), true, "10")
