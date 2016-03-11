@@ -2,6 +2,8 @@
 
 open System
 open System.ComponentModel
+open System.Threading
+open System.Threading.Tasks
 
 type AsyncBuilder() =
   inherit BaseBuilder()
@@ -85,8 +87,32 @@ type AsyncOptionBuilder() =
 [<AutoOpen>]
 module AsyncSyntax =
 
-  open System.Threading
-  open System.Threading.Tasks
+  let private unsafe computation =  async {
+    let! computation = computation
+    return! computation async.Return
+  }
+
+  module Unsafe =
+
+    type Async with
+      static member UnsafeRunSynchronously((computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero), ?timeout: int, ?cancellationToken: CancellationToken) =
+        Async.RunSynchronously(unsafe computation, ?timeout = timeout, ?cancellationToken = cancellationToken)
+      static member UnsafeStart((computation: Async<('T -> Async<'T>) -> Async<unit>>, RequireZero), ?cancellationToken: CancellationToken) =
+        Async.Start(unsafe computation, ?cancellationToken = cancellationToken)
+      static member UnsafeStartAsTask((computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero), ?taskCreationOptions: TaskCreationOptions, ?cancellationToken: CancellationToken) =
+        Async.StartAsTask(unsafe computation, ?taskCreationOptions = taskCreationOptions, ?cancellationToken = cancellationToken)
+      static member UnsafeStartImmediate((computation: Async<('T -> Async<'T>) -> Async<unit>>, RequireZero), ?cancellationToken: CancellationToken) =
+        Async.StartImmediate(unsafe computation, ?cancellationToken = cancellationToken)
+      static member UnsafeStartWithContinuations
+        (
+          (computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero),
+          continuation, exceptionContinuation, cancellationContinuation, ?cancellationToken: CancellationToken) =
+            let c = unsafe computation
+            Async.StartWithContinuations(c, continuation, exceptionContinuation, cancellationContinuation, ?cancellationToken = cancellationToken)
+      static member UnsafeStartChild((computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero), ?millisecondsTimeout: int) =
+        Async.StartChild(unsafe computation, ?millisecondsTimeout = millisecondsTimeout)
+      static member UnsafeStartChildAsTask((computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero), ?taskCreationOptions: TaskCreationOptions) =
+        Async.StartChildAsTask(unsafe computation, ?taskCreationOptions = taskCreationOptions)
 
   let inline private asyncWithDefault zero computation =
     async {

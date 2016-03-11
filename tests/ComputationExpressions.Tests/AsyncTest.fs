@@ -18,6 +18,17 @@ module AsyncTest =
       |> assertEquals 0
   }
 
+  module Unsafe =
+
+    open Unsafe
+
+    let ``unsafe runner should return unchecked default value`` = test {
+      let res = async { () }
+      do!
+        res |> Async.UnsafeRunSynchronously
+        |> assertEquals 0
+    }
+
   let ret = test {
     let res = async { return 0 }
     do!
