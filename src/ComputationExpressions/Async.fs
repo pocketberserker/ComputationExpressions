@@ -95,6 +95,9 @@ module AsyncSyntax =
     }
 
   type Async with
+    static member ApplyZero(zero: 'T) =
+      fun (computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero) ->
+        asyncWithDefault zero computation
     static member RunSynchronously(zero: 'T, ?timeout: int, ?cancellationToken: CancellationToken) =
       fun (computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero) ->
         Async.RunSynchronously(asyncWithDefault zero computation, ?timeout = timeout, ?cancellationToken = cancellationToken)
