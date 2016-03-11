@@ -22,7 +22,7 @@ type AsyncBuilder() =
     return! f async.Return
   }
   member __.Source(x: Async<'T>) = x
-  member __.Source(xs: #seq<_>) = async.Return(xs)
+  member __.Source(xs: #seq<_>) = xs
   member __.Using(x: #IDisposable, f) = async.Using(x, f)
   member __.Combine(x: Async<(_ -> _) -> _>, rest: unit -> Async<(_ -> _) -> _>) =
     async {
@@ -36,12 +36,10 @@ type AsyncBuilder() =
     if guard () then
       this.Combine(f (), fun () -> this.While(guard, f))
     else this.Zero()
-  member this.For(xs: Async<#seq<_>>, f) = async {
-    let! xs = xs
-    return! this.Using(
+  member this.For(xs: #seq<_>, f) =
+    this.Using(
       xs.GetEnumerator(),
       fun itor -> this.While(itor.MoveNext, fun () -> f itor.Current))
-  }
   member __.Delay(f) = f
   member __.Run(f: unit -> Async<('T -> Async<'T>) -> 'U>) =
     (f (), RequireZero)
