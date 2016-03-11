@@ -140,7 +140,7 @@ module AsyncSyntax =
       fun (computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero) ->
         let c = asyncWithDefault zero computation
         Async.StartWithContinuations(c, continuation, exceptionContinuation, cancellationContinuation, ?cancellationToken = cancellationToken)
-    static member Start(zero: 'T, ?millisecondsTimeout: int) =
+    static member StartChild(zero: 'T, ?millisecondsTimeout: int) =
       fun (computation: Async<('T -> Async<'T>) -> Async<'U>>, RequireZero) ->
         Async.StartChild(asyncWithDefault zero computation, ?millisecondsTimeout = millisecondsTimeout)
     static member StartChildAsTask(zero: 'T, ?taskCreationOptions: TaskCreationOptions) =
